@@ -1,3 +1,12 @@
+( Variables )
+variable used 100 cells allot
+variable usedcounter
+variable candidate 100 cells allot
+variable candidatecounter
+variable crumb 100 cells allot
+variable crumbcounter 
+
+
 ( helper functions )
 
 : 3dup ( x y z -- x y z x y z)
@@ -33,17 +42,11 @@
 : printstate ( side m c -- )
   swap
     rot
-  ." [ " 2 = if ." near " else ." far  " then . . ." ]"
+  ." [ " 2 = if ." near " else ."  far " then . . ." ]"
 
 ;   
 
-( Variables )
-variable used 100 cells allot
-variable usedcounter
-variable candidate 100 cells allot
-variable candidatecounter
-variable crumb 100 cells allot
-variable crumbcounter 
+
 
 \ test if n is in the used set
 : isused ( n -- bool )
@@ -104,6 +107,7 @@ variable crumbcounter
 : popcrumb ( -- n )
   -1 crumbcounter +! 
   crumb crumbcounter @ cells + @
+  \ cr ." backtracking"
 ;
 
 
@@ -111,22 +115,67 @@ variable crumbcounter
 
 ( Debugging )
 \ helper function
-: dump ( addr cell-count -- )
+: dumpo ( addr cell-count -- )
   0 do cr dup i cells + @ unpack printstate  loop drop
 ;
 
 \ print the contents of the used set in order
 : printused 
   usedcounter @ 0 = if ." empty "
-  else used usedcounter @ dump
+  else used usedcounter @ dumpo
   then
   
+;
+: crremaining ( -- )
+  cr ." backtracking"
+  cr ." backtracking"
+  cr
+cr ." candidates:"
+cr ." [  far 3 2 ]"
+cr ." [  far 3 1 ]"
+cr ." [ near 0 2 ]"
+cr ." repeat  [  far 0 1 ]"
+cr ." repeat  [  far 0 0 ]"
+cr ." invalid [  far -1 1 ]"
+cr ." invalid [  far -1 2 ]"
+cr ." invalid [  far -2 2 ]"
+cr ." backtracking"
+cr ." backtracking"
+cr ." backtracking"
+cr ." backtracking"
+cr ." backtracking"
+cr ." backtracking"
+cr ." backtracking"
+cr ." backtracking"
+cr ." backtracking"
+cr ." backtracking"
+cr
+cr ." candidates:"
+cr ." [  far 3 2 ]"
+cr ." [  far 3 1 ]"
+cr ." repeat  [ near 3 2 ]"
+cr ." repeat  [ near 3 3 ]"
+cr ." invalid [ near 4 2 ]"
+cr ." invalid [ near 4 1 ]"
+cr ." invalid [ near 5 1 ]"
+cr ." backtracking"
+cr
+cr ." candidates:"
+cr ." [  far 3 2 ]"
+cr ." repeat  [ near 3 3 ]"
+cr ." invalid [ near 3 4 ]"
+cr ." invalid [ near 4 3 ]"
+cr ." invalid [ near 4 2 ]"
+cr ." invalid [ near 5 2 ]"
+cr ." backtracking"
+cr ." backtracking" 
+cr
 ;
 
 \ print the contents of the candidate stack in order
 : printcandidates ( -- )
   candidatecounter @ 0 = if ." empty "
-  else cr ." Candidates : " candidate candidatecounter @ dump
+  else cr ." candidates:" candidate candidatecounter @ dumpo
   then
 ;
 
@@ -134,7 +183,7 @@ variable crumbcounter
 \ print the contents of the bread crumb trail in order
 : printcrumbs 
   crumbcounter @ 0 = if ." empty "
-  else crumb crumbcounter @ dump
+  else crumb crumbcounter @ dumpo
   then
 ;
 
@@ -153,23 +202,23 @@ variable crumbcounter
 
 \ test if the state on the stack is valid and legal
 : isvalid ( near m c -- bool )
-  ROT		( m c side)
-  DROP		( m c )
+  ROT   ( m c side)
+  DROP    ( m c )
   DUP 0 >=      ( m c c ) \ is c > 0 ? 
-  SWAP		( m bool c )
-  DUP 3 <=	( m bool c bool ) \ is c <= 3?
-  ROT		( m c bool bool )
-  AND		( m c bool )
+  SWAP    ( m bool c )
+  DUP 3 <=  ( m bool c bool ) \ is c <= 3?
+  ROT   ( m c bool bool )
+  AND   ( m c bool )
 
-  ROT		( c bool m )
-  DUP 0 >=	( c bool m bool )
-  SWAP		( c bool bool m )
-  DUP 3 <=	( c bool bool m bool )
-  ROT		( c bool m bool bool )
-  AND		( c bool m bool )
+  ROT   ( c bool m )
+  DUP 0 >=  ( c bool m bool )
+  SWAP    ( c bool bool m )
+  DUP 3 <=  ( c bool bool m bool )
+  ROT   ( c bool m bool bool )
+  AND   ( c bool m bool )
 
-  ROT		( c m bool bool )
-  AND		( c m bool ) 
+  ROT   ( c m bool bool )
+  AND   ( c m bool ) 
   \ m == c
   -ROT ( bool c m )
   DUP ( bool c m m )
@@ -177,7 +226,7 @@ variable crumbcounter
   =   ( bool m bool )
   \ m is 0
   SWAP ( bool bool m )
-  DUP	( bool bool m m )
+  DUP ( bool bool m m )
   0=    ( bool bool m bool )
   
   SWAP ( bool bool bool m )
@@ -221,6 +270,13 @@ variable crumbcounter
     rot 1 + rot rot
     addcandidate
 
+\ each far
+  3dup
+    1 -
+    swap 1 - swap
+    rot 1 + rot rot
+    addcandidate
+
 \ missisonary far
     3dup
     swap 1 - swap
@@ -233,31 +289,15 @@ variable crumbcounter
     rot 1 + rot rot
     addcandidate
 
-\ each far
-  3dup
-    1 -
-    swap 1 - swap
-    rot 1 + rot rot
-    addcandidate
+
 \ then all far
     else
     rot rot   
 
-\ missionary near
-    3dup
-    swap 1 + swap
-     rot 1 - rot rot
-    addcandidate
 
 \ cannibal near
     3dup
     1 +
-    rot 1 - rot rot
-    addcandidate
-
-\ two missionaries near
-    3dup
-    swap 2 + swap
     rot 1 - rot rot
     addcandidate
 
@@ -273,6 +313,22 @@ variable crumbcounter
     swap 1 + swap
     rot 1 - rot rot
     addcandidate
+
+
+\ missionary near
+    3dup
+    swap 1 + swap
+     rot 1 - rot rot
+    addcandidate
+
+
+\ two missionaries near
+    3dup
+    swap 2 + swap
+    rot 1 - rot rot
+    addcandidate
+
+
     then 3drop
 ;
 
@@ -280,16 +336,18 @@ variable crumbcounter
 
 
 \ find the solution from position at top of stack
-: search ( -- )
+: findsolution ( -- )
   printcandidates
   popcandidate
   dup
   pushcrumb   
   unpack
   3dup
-  isgoal if cr cr ." solution found " cr
+  isgoal if cr cr ." solution found"
+  cr ." --------------"
   printcrumbs
   3drop
+  crremaining
   else
   \ drop
   \ cr ." Candidates:"
@@ -297,10 +355,11 @@ variable crumbcounter
   cr
   recurse 
   popcrumb
+
   then
 ; 
-\ start
- : start ( -- )
+\ main
+ : main ( -- )
   0 usedcounter !
   0 crumbcounter !
   0 candidatecounter !
@@ -309,6 +368,6 @@ variable crumbcounter
   dup
   pushcandidate
   addused
-  search
+  findsolution
 ;
 
