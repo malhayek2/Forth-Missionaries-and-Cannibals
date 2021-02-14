@@ -44,10 +44,10 @@ Done
 
 ### Todos
 
- - submit it
+ - TBD
 
 License
 ----
-**Free Software i guess**
+**  plagiarism is WRONG  **  Russ will know 
 
 
